@@ -10,10 +10,31 @@
 
 #target illustrator-19
 
+//Progress bar
+var myProgressPanel,
+myMaximumValue = 300,
+myProgressBarWidth = 300;
+
+myCreateProgressPanel(myMaximumValue, myProgressBarWidth);
+
+function myCreateProgressPanel(myMaximumValue, myProgressBarWidth) {
+        myProgressPanel = new Window("window", "Processing file.");
+        with (myProgressPanel) {
+            myProgressPanel.myProgressBar = add("progressbar", [12, 12, myProgressBarWidth, 24], 0, myMaximumValue)
+            }
+        return myProgressPanel;
+    }
+
+
 var theFolder = Folder.selectDialog ("Select a folder");
 
+
+
 if (theFolder != null) {
-    forEachDescendantFile(theFolder, doStuffIfDocument)
+    myProgressPanel = myCreateProgressPanel(100, 400);
+    myProgressPanel.show();  
+    forEachDescendantFile(theFolder, doStuffIfDocument);
+    myProgressPanel.close();
     }
 
 function doStuff(document) {
@@ -47,7 +68,7 @@ function saveFileToPDF (dest) {
     }
 }
 
-//Open file, the call doStuff().
+//Open file, then call doStuff().
 function doStuffIfDocument(oFile) {
     if ((matchExtension (oFile, 'ai')) || (matchExtension (oFile, 'eps'))) { // process .ai or .eps files
         var document = app.open(oFile);
@@ -60,10 +81,16 @@ function doStuffIfDocument(oFile) {
     }
 }
 
-function forEachDescendantFile(folder, callback) {
+function forEachDescendantFile(folder, callback) {  
+    
     var aChildren = folder.getFiles();
     for (var i = 0; i < aChildren.length; i++) {
+        myProgressPanel.myProgressBar.value = (100/(aChildren.length))*i;
+        myProgressPanel.update();
+        $.writeln("Processing file " + i);
+        $.writeln("Total files:" + aChildren.length);
         var child = aChildren[i];
+        $.writeln("file " + aChildren[i]);
         if (child instanceof File) {
             callback(child);
         }
@@ -74,6 +101,7 @@ function forEachDescendantFile(folder, callback) {
             throw new Error("The object at \"" + child.fullName + "\" is a child of a folder and yet is not a file or folder.");
         }
     }
+    myProgressPanel.close();
 }
 
 function matchExtension(iFile, sExtension) {
@@ -88,7 +116,7 @@ function matchExtension(iFile, sExtension) {
 function findBiggestAB() {
         var doc = app.activeDocument;
         var na = doc.artboards.length; // number of artboards in the document
-        $.writeln('Number of artboards: ' + na);
+        //$.writeln('Number of artboards: ' + na);
 
         var AB = {}, arr = [];
         for (i = 0; i < na; i++) {
@@ -103,7 +131,7 @@ function findBiggestAB() {
             AB.name = ArtName;
             AB.width = width;
             
-            $.writeln(AB.name + ' ___ ' +  AB.width + ' px');
+            //$.writeln(AB.name + ' ___ ' +  AB.width + ' px');
             arr.push({name: AB.name, width: AB.width, range: i}); // proper way to insert the object in array.
             }
 
@@ -114,6 +142,6 @@ function findBiggestAB() {
 
         //show last element of the array
         biggestArtBoard = sortedArray.slice(-1)[0];
-        $.writeln('The biggest ArtBoard is ' + biggestArtBoard.name + '. It has ' + biggestArtBoard.width + 'px.');
+        //$.writeln('The biggest ArtBoard is ' + biggestArtBoard.name + '. It has ' + biggestArtBoard.width + 'px.');
         return biggestArtBoard;
-    };
+    }
